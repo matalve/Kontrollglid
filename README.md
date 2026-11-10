@@ -1,30 +1,28 @@
 # Kontrollglid
 
-A small macOS menu bar app that does two things for people who are used to Windows:
+A macOS menu bar app for people who are used to Windows. The name is Swedish for "control glide":
 
-- **Glid** ("glide"): smooth scrolling for ordinary mouse wheels, separate scroll direction for mouse and trackpad, and extra mouse buttons as shortcuts.
-- **Kontroll** ("control"): Windows keyboard shortcuts on an external PC keyboard. Ctrl+C, Home/End, Alt+Tab and friends work the way you expect.
+- **Glide:** better scrolling for ordinary mouse wheels, and extra mouse buttons as shortcuts.
+- **Control:** Windows keyboard shortcuts on an external PC keyboard.
 
-The app has no network code, no dependencies and no telemetry. Settings are stored locally in `UserDefaults`.
+No network code, no dependencies, no telemetry. Settings stay on your Mac. Requires macOS 14 or later.
 
-## Features
+## Mouse and trackpad
 
-### Mouse and trackpad
+- **Wheel modes:** smooth (animated, with adjustable step, speed and smoothness), no acceleration (a fixed number of lines per notch, without the sluggish start macOS has), or macOS default.
+- **Direction:** set separately for mouse wheel and trackpad: follow macOS, like Windows, or natural.
+- **Modifiers:** hold Shift to scroll sideways, Alt to scroll faster, Cmd to pause smoothing. All three can be changed.
+- **Extra buttons:** assign middle, back, forward and other buttons to any key combination. Back and forward work out of the box.
 
-- Smooth scrolling for mouse wheels with adjustable step, speed and smoothness.
-- A mode without acceleration: every notch of the wheel scrolls a fixed number of lines, with no animation and without the sluggish start macOS has.
-- Scroll direction per device type: follow macOS, like Windows, or natural.
-- Hold Shift to scroll sideways, Alt to scroll faster and Cmd to pause smoothing. All three can be changed.
-- Extra mouse buttons (middle, back, forward …) can be assigned to any key combination.
-- Per-app rules.
+Three-finger swipes follow the macOS "Natural scrolling" setting, which the app cannot change. For natural gestures and a Windows-style wheel, turn that setting on and set the mouse wheel to "Like Windows".
 
-Three-finger swipes follow the macOS "Natural scrolling" setting, which the app cannot change. For natural trackpad gestures and a Windows-style wheel, turn Natural scrolling on in macOS and set the mouse wheel to "Like Windows" in Kontrollglid.
+## Keyboard
 
-### Keyboard
+On a PC keyboard Ctrl is ⌃, Alt is ⌥ and Win is ⌘.
 
 | You press | macOS receives | Effect |
 | --- | --- | --- |
-| Ctrl + letter/digit | ⌘ + same key | Copy, paste, undo, save, find … |
+| Ctrl + letter or digit | ⌘ + same key | Copy, paste, undo, save, find … |
 | Ctrl+Y | ⇧⌘Z | Redo |
 | Ctrl+Insert / Shift+Insert | ⌘C / ⌘V | Copy / paste |
 | Home / End | ⌘← / ⌘→ | Start / end of the line |
@@ -32,23 +30,38 @@ Three-finger swipes follow the macOS "Natural scrolling" setting, which the app 
 | Ctrl+← / Ctrl+→ | ⌥← / ⌥→ | Move by word |
 | Ctrl+Backspace / Ctrl+Delete | ⌥⌫ / ⌥⌦ | Delete a word |
 | Alt+Tab | ⌘⇥ | Switch app |
-| Alt+F4 / Ctrl+F4 | ⌘Q / ⌘W | Quit app / close window |
+| Alt+F4 / Ctrl+F4 | ⌘Q / ⌘W | Quit app / close window or tab |
 | F5 | ⌘R | Reload |
 | Print Screen | ⇧⌘5 | Screenshot tool |
-| Win+L / Win+E | ⌃⌘Q / Finder | Lock the screen / open Finder |
+| Win+L | ⌃⌘Q | Lock the screen |
+| Win+E | | Open Finder |
 | Win+← / Win+→ | ⌃← / ⌃→ | Switch desktop |
-| AltGr+7 / 0 / plus / < / 5 | ⇧⌥8 / ⇧⌥9 / ⇧⌥7 / ⌥7 / ⇧4 | { } \\ \| € as on a Swedish PC keyboard |
-| F2 / Delete in Finder | ↩ / ⌘⌫ | Rename / move to the Trash |
+| F2 / Delete (Finder only) | ↩ / ⌘⌫ | Rename / move to the Trash |
 
-Shift can be added to select text. Every group can be turned off, and by default only external keyboards are translated.
+Add Shift to the navigation keys to select text.
 
-Each app can be set to one of three modes:
+**AltGr** types the characters printed on a Swedish PC keyboard: AltGr+7 `{`, AltGr+0 `}`, AltGr+plus `\`, AltGr+< `|`, AltGr+5 or AltGr+E `€`. This assumes the macOS Swedish layout.
 
-- **Translate**: all rules apply.
-- **Terminal mode**: Ctrl is left alone so Ctrl+C still interrupts, Home/End go to the start/end of the line, and Alt+Tab and the Win key keep working. Common terminals start in this mode.
-- **Off**: nothing is translated. Remote desktops and virtual machines start in this mode.
+Every group of shortcuts can be turned off. By default only external keyboards are translated, so the built-in keyboard keeps working the Mac way.
 
-The Keyboard tab has a key tester that shows which key code the app receives and what it would be translated to.
+### Per-app modes
+
+| Mode | Behaviour | Default for |
+| --- | --- | --- |
+| Translate | All rules apply. | Everything else |
+| Terminal mode | Ctrl is left alone, so Ctrl+C still interrupts. Home/End go to the start/end of the line. Alt+Tab, Win keys and AltGr keep working. | Terminal, iTerm, Ghostty, Warp, kitty, Alacritty |
+| Off | Nothing is translated. | Windows App, Parallels, VMware Fusion, UTM |
+
+Smooth scrolling can also be turned off per app.
+
+### Key tester
+
+The Keyboard tab shows the key code the app receives, which keyboard it came from and what it would be translated to. Use it when a shortcut does not behave as expected.
+
+## Permissions
+
+- **Accessibility:** required to read and change scroll, button and key events.
+- **Input Monitoring:** only used to tell an external keyboard from the built-in one. Not needed if you choose "All keyboards".
 
 ## Build and install
 
@@ -58,26 +71,23 @@ Requires Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew inst
 ./scripts/install.sh
 ```
 
-The script builds a Release version, puts it in `/Applications` and starts it. To work in Xcode, run `xcodegen generate` and open `Kontrollglid.xcodeproj`.
+This builds a Release version, copies it to `/Applications` and starts it. To work in Xcode, run `xcodegen generate` and open `Kontrollglid.xcodeproj`.
 
-By default the app is signed ad hoc. macOS ties the Accessibility permission to the signature, so with ad-hoc signing you have to grant it again after every build. To avoid that, copy `Config/Local.xcconfig.example` to `Config/Local.xcconfig` and enter your own Apple developer team ID. That file is ignored by git.
+**Signing:** the default is ad-hoc signing, which makes macOS ask for the Accessibility permission again after every build. To avoid that, copy `Config/Local.xcconfig.example` to `Config/Local.xcconfig` (ignored by git) and enter your Apple developer team ID.
 
-Tests:
+Run the tests:
 
 ```bash
 xcodebuild -project Kontrollglid.xcodeproj -scheme Kontrollglid -derivedDataPath build test
 ```
 
-## Permissions
-
-- **Accessibility** is required to read and change scroll, button and key events.
-- **Input Monitoring** is only needed to tell whether a key press came from an external keyboard. If you choose "All keyboards" it is not needed.
-
 ## Code layout
 
-- `Kontrollglid/Logic`: pure logic with no system dependencies: translation rules, scroll smoothing and the settings model. Covered by unit tests.
-- `Kontrollglid/Engine`: event taps (`CGEventTap`) for scrolling, mouse buttons and the keyboard, plus keyboard identification through IOKit HID.
-- `Kontrollglid/App` and `Kontrollglid/UI`: menu bar, settings window and storage.
+| Folder | Contents |
+| --- | --- |
+| `Kontrollglid/Logic` | Translation rules, scroll smoothing and the settings model. No system dependencies; covered by unit tests. |
+| `Kontrollglid/Engine` | Event taps for scrolling, mouse buttons and keys, and keyboard identification through IOKit HID. |
+| `Kontrollglid/App`, `Kontrollglid/UI` | Menu bar, settings window and storage. |
 
 ## Background
 
