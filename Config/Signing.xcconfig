@@ -1,0 +1,8 @@
+// Ad-hoc signing by default, so the project builds without an Apple account.
+// macOS ties the Accessibility permission to the signature, and an ad-hoc
+// signature changes on every build, so copy Local.xcconfig.example to
+// Local.xcconfig and fill in your own team to keep the permission.
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = -
+
+#include? "Local.xcconfig"

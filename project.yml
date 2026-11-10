@@ -1,0 +1,51 @@
+name: Kontrollglid
+options:
+  bundleIdPrefix: se.matalve
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+configFiles:
+  Debug: Config/Signing.xcconfig
+  Release: Config/Signing.xcconfig
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  Kontrollglid:
+    type: application
+    platform: macOS
+    sources:
+      - Kontrollglid
+    info:
+      path: Kontrollglid/Info.plist
+      properties:
+        CFBundleDisplayName: Kontrollglid
+        LSUIElement: true
+        LSApplicationCategoryType: public.app-category.utilities
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: se.matalve.Kontrollglid
+        ENABLE_HARDENED_RUNTIME: YES
+  KontrollglidTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - KontrollglidTests
+      - Kontrollglid/Logic
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: se.matalve.KontrollglidTests
+schemes:
+  Kontrollglid:
+    build:
+      targets:
+        Kontrollglid: all
+        KontrollglidTests: [test]
+    run:
+      config: Debug
+    test:
+      targets:
+        - KontrollglidTests
