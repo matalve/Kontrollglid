@@ -14,6 +14,8 @@ No network code, no dependencies, no telemetry. Settings stay on your Mac. Requi
 - **Modifiers:** hold Shift to scroll sideways, Alt to scroll faster, Cmd to pause smoothing. All three can be changed.
 - **Extra buttons:** assign middle, back, forward and other buttons to any key combination. Back and forward work out of the box.
 
+Everything can be paused from the menu bar menu.
+
 Three-finger swipes follow the macOS "Natural scrolling" setting, which the app cannot change. For natural gestures and a Windows-style wheel, turn that setting on and set the mouse wheel to "Like Windows".
 
 ## Keyboard
