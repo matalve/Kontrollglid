@@ -158,6 +158,8 @@ struct AppRule: Codable, Equatable, Identifiable {
 }
 
 struct AppSettings: Codable, Equatable {
+    /// Everything is switched off until the user resumes.
+    var paused = false
     var scroll = ScrollSettings()
     var buttonsEnabled = true
     var buttons: [ButtonBinding] = [

@@ -10,15 +10,21 @@ struct KontrollglidApp: App {
     var body: some Scene {
         MenuBarExtra("Kontrollglid", systemImage: state.enginesRunning ? "computermouse.fill" : "computermouse") {
             if !state.accessibilityGranted {
-                Text("Accessibility permission is missing")
+                Button("Grant Accessibility Permission…") { SettingsWindow.shared.show() }
+                Divider()
             }
-            Picker("Mouse wheel", selection: $store.settings.scroll.wheelMode) {
-                Text("Smooth scrolling").tag(WheelMode.smooth)
-                Text("No acceleration").tag(WheelMode.linear)
-                Text("macOS default").tag(WheelMode.system)
+            Toggle("Pause Kontrollglid", isOn: $store.settings.paused)
+            Divider()
+            Group {
+                Picker("Mouse Wheel", selection: $store.settings.scroll.wheelMode) {
+                    Text("Smooth").tag(WheelMode.smooth)
+                    Text("No Acceleration").tag(WheelMode.linear)
+                    Text("macOS Default").tag(WheelMode.system)
+                }
+                Toggle("Mouse Button Shortcuts", isOn: $store.settings.buttonsEnabled)
+                Toggle("Windows Shortcuts", isOn: $store.settings.keyboard.enabled)
             }
-            Toggle("Mouse buttons", isOn: $store.settings.buttonsEnabled)
-            Toggle("Windows shortcuts", isOn: $store.settings.keyboard.enabled)
+            .disabled(store.settings.paused)
             Divider()
             Button("Settings…") { SettingsWindow.shared.show() }
                 .keyboardShortcut(",")

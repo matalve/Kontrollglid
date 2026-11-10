@@ -10,7 +10,7 @@ struct SettingsView: View {
             KeyboardTab().tabItem { Label("Keyboard", systemImage: "keyboard") }
             AppsTab().tabItem { Label("Apps", systemImage: "square.grid.2x2") }
         }
-        .frame(width: 600, height: 540)
+        .frame(width: 620, height: 600)
     }
 }
 
@@ -19,6 +19,7 @@ struct SettingsView: View {
 private struct GeneralTab: View {
     @ObservedObject private var state = AppState.shared
     @ObservedObject private var store = SettingsStore.shared
+    @State private var confirmReset = false
 
     var body: some View {
         Form {
@@ -36,21 +37,23 @@ private struct GeneralTab: View {
                     action: state.requestInputMonitoring
                 )
             }
-            Section("Features") {
-                Picker("Mouse wheel", selection: $store.settings.scroll.wheelMode) {
-                    Text("Smooth scrolling").tag(WheelMode.smooth)
-                    Text("No acceleration").tag(WheelMode.linear)
-                    Text("macOS default").tag(WheelMode.system)
-                }
-                Toggle("Mouse buttons as shortcuts", isOn: $store.settings.buttonsEnabled)
-                Toggle("Windows shortcuts", isOn: $store.settings.keyboard.enabled)
-            }
             Section {
                 Toggle("Launch at login", isOn: Binding(
                     get: { state.launchAtLogin },
                     set: { state.launchAtLogin = $0 }
                 ))
-                Button("Reset all settings") { store.resetToDefaults() }
+                Toggle(isOn: $store.settings.paused) {
+                    Text("Pause Kontrollglid")
+                    Text("Turns off scrolling, mouse buttons and shortcuts until you resume. Also in the menu bar menu.")
+                }
+            }
+            Section {
+                Button("Reset All Settings…") { confirmReset = true }
+                    .confirmationDialog("Reset all settings to their defaults?", isPresented: $confirmReset) {
+                        Button("Reset", role: .destructive) { store.resetToDefaults() }
+                    } message: {
+                        Text("Your mouse button assignments and per-app rules will be lost.")
+                    }
             } footer: {
                 Text("Kontrollglid has no network code. Nothing leaves this Mac.")
             }
@@ -85,18 +88,16 @@ private struct ScrollTab: View {
     @ObservedObject private var store = SettingsStore.shared
 
     var body: some View {
+        let mode = store.settings.scroll.wheelMode
         Form {
-            Section("Direction") {
-                DirectionPicker(title: "Mouse wheel", selection: $store.settings.scroll.mouseDirection)
-                DirectionPicker(title: "Trackpad", selection: $store.settings.scroll.trackpadDirection)
-            }
             Section {
                 Picker("Mode", selection: $store.settings.scroll.wheelMode) {
-                    Text("Smooth scrolling").tag(WheelMode.smooth)
+                    Text("Smooth").tag(WheelMode.smooth)
                     Text("No acceleration").tag(WheelMode.linear)
                     Text("macOS default").tag(WheelMode.system)
                 }
-                switch store.settings.scroll.wheelMode {
+                DirectionPicker(title: "Direction", selection: $store.settings.scroll.mouseDirection)
+                switch mode {
                 case .smooth:
                     SliderRow(title: "Step", value: $store.settings.scroll.step, range: 10...100, format: "%.0f px")
                     SliderRow(title: "Speed", value: $store.settings.scroll.speed, range: 0.5...8, format: "%.1f×")
@@ -109,13 +110,28 @@ private struct ScrollTab: View {
             } header: {
                 Text("Mouse wheel")
             } footer: {
-                Text("No acceleration: every notch of the wheel scrolls the same distance, with no animation and without the sluggish start macOS has.")
+                switch mode {
+                case .smooth: Text("Animated scrolling. Step is the shortest distance one notch moves, Speed multiplies it, and Smoothness sets how long the glide lasts.")
+                case .linear: Text("Every notch scrolls the same distance, with no animation and without the sluggish start macOS has.")
+                case .system: Text("The wheel is left to macOS. Only the direction is changed.")
+                }
             }
-            Section("Hold to") {
-                ModifierPicker(title: "Scroll sideways", selection: $store.settings.scroll.horizontalModifier)
-                ModifierPicker(title: "Scroll faster", selection: $store.settings.scroll.dashModifier)
-                SliderRow(title: "Fast factor", value: $store.settings.scroll.dashMultiplier, range: 1.5...8, format: "%.1f×")
-                ModifierPicker(title: "Pause smoothing", selection: $store.settings.scroll.bypassModifier)
+            if mode != .system {
+                Section("Hold while scrolling the wheel to") {
+                    ModifierPicker(title: "Scroll sideways", selection: $store.settings.scroll.horizontalModifier)
+                    ModifierPicker(title: "Scroll faster", selection: $store.settings.scroll.dashModifier)
+                    SliderRow(title: "Faster by", value: $store.settings.scroll.dashMultiplier, range: 1.5...8, format: "%.1f×")
+                    if mode == .smooth {
+                        ModifierPicker(title: "Pause smoothing", selection: $store.settings.scroll.bypassModifier)
+                    }
+                }
+            }
+            Section {
+                DirectionPicker(title: "Direction", selection: $store.settings.scroll.trackpadDirection)
+            } header: {
+                Text("Trackpad")
+            } footer: {
+                Text("Swipes between desktops and pages always follow the Natural scrolling setting in macOS. Choose Follow macOS here to keep scrolling and swipes consistent.")
             }
         }
         .formStyle(.grouped)
@@ -192,7 +208,7 @@ private struct ButtonsTab: View {
     var body: some View {
         Form {
             Section {
-                Toggle("Enabled", isOn: $store.settings.buttonsEnabled)
+                Toggle("Mouse button shortcuts", isOn: $store.settings.buttonsEnabled)
             }
             Section {
                 if store.settings.buttons.isEmpty {
@@ -226,6 +242,7 @@ private struct ButtonsTab: View {
             } footer: {
                 Text("Left and right click cannot be reassigned. Mission Control and desktop switching need the standard macOS shortcuts to be enabled.")
             }
+            .disabled(!store.settings.buttonsEnabled)
         }
         .formStyle(.grouped)
     }
@@ -247,13 +264,15 @@ private struct KeyboardTab: View {
     @ObservedObject private var state = AppState.shared
 
     var body: some View {
+        let rules = $store.settings.keyboard.rules
         Form {
             Section {
-                Toggle("Translate Windows shortcuts", isOn: $store.settings.keyboard.enabled)
+                Toggle("Windows shortcuts", isOn: $store.settings.keyboard.enabled)
                 Picker("Applies to", selection: $store.settings.keyboard.scope) {
                     Text("External keyboards only").tag(KeyboardScope.externalOnly)
                     Text("All keyboards").tag(KeyboardScope.all)
                 }
+                .disabled(!store.settings.keyboard.enabled)
                 if store.settings.keyboard.scope == .externalOnly {
                     if !state.inputMonitoringGranted {
                         Label("Needs the Input Monitoring permission (see General). Without it nothing is translated.", systemImage: "exclamationmark.triangle.fill")
@@ -264,22 +283,25 @@ private struct KeyboardTab: View {
                         Text("Connected: \(state.externalKeyboards.joined(separator: ", "))").foregroundStyle(.secondary)
                     }
                 }
-            }
-            Section {
-                RuleToggle("Ctrl as Cmd", "Ctrl+C, V, X, Z, A, S, F, T, W … plus Ctrl+Y for redo and Ctrl/Shift+Insert", $store.settings.keyboard.rules.ctrlToCmd)
-                RuleToggle("Home and End", "Start/end of the line. With Ctrl: start/end of the document", $store.settings.keyboard.rules.homeEnd)
-                RuleToggle("Word navigation", "Ctrl+←/→ moves by word, Ctrl+Backspace/Delete deletes a word", $store.settings.keyboard.rules.wordNavigation)
-                RuleToggle("Alt+Tab", "Switches app, like ⌘⇥", $store.settings.keyboard.rules.altTab)
-                RuleToggle("Alt+F4 and Ctrl+F4", "Quits the app and closes the window/tab", $store.settings.keyboard.rules.closeQuit)
-                RuleToggle("F5 and Print Screen", "Reloads and opens the screenshot tool", $store.settings.keyboard.rules.functionKeys)
-                RuleToggle("Win key", "Win+L locks the screen, Win+E opens Finder, Win+←/→ switches desktop", $store.settings.keyboard.rules.winKey)
-                RuleToggle("Finder", "F2 renames, Delete moves to the Trash", $store.settings.keyboard.rules.finderKeys)
-                RuleToggle("AltGr as on a PC", "AltGr+7 and 0 type { }, AltGr+plus types \\, AltGr+< types |, AltGr+5 and E type €. Assumes the Swedish layout", $store.settings.keyboard.rules.altGr)
-            } header: {
-                Text("Shortcuts")
             } footer: {
-                Text("On a PC keyboard Ctrl = ⌃, Alt = ⌥ and Win = ⌘. Terminals and remote desktops have their own modes under Apps.")
+                Text("On a PC keyboard Ctrl = ⌃, Alt = ⌥ and Win = ⌘. Terminals and remote desktops are handled under Apps.")
             }
+            Group {
+                Section("Editing") {
+                    RuleToggle("Ctrl as Cmd", "Ctrl+C, V, X, Z, A, S, F, T, W … plus Ctrl+Y for redo and Ctrl/Shift+Insert", rules.ctrlToCmd)
+                    RuleToggle("Home and End", "Start/end of the line. With Ctrl: start/end of the document", rules.homeEnd)
+                    RuleToggle("Word navigation", "Ctrl+←/→ moves by word, Ctrl+Backspace/Delete deletes a word", rules.wordNavigation)
+                    RuleToggle("AltGr as on a PC", "AltGr+7 and 0 type { }, AltGr+plus types \\, AltGr+< types |, AltGr+5 and E type €. Assumes the Swedish layout", rules.altGr)
+                }
+                Section("Apps and windows") {
+                    RuleToggle("Alt+Tab", "Switches app, like ⌘⇥", rules.altTab)
+                    RuleToggle("Alt+F4 and Ctrl+F4", "Quits the app and closes the window/tab", rules.closeQuit)
+                    RuleToggle("Win key", "Win+L locks the screen, Win+E opens Finder, Win+←/→ switches desktop", rules.winKey)
+                    RuleToggle("F5 and Print Screen", "Reloads and opens the screenshot tool", rules.functionKeys)
+                    RuleToggle("Finder", "F2 renames, Delete moves to the Trash", rules.finderKeys)
+                }
+            }
+            .disabled(!store.settings.keyboard.enabled)
             Section {
                 Text(state.lastKeyReport ?? "Press a key or combination while this window is active.")
                     .foregroundStyle(state.lastKeyReport == nil ? .secondary : .primary)
@@ -318,9 +340,21 @@ private struct RuleToggle: View {
 private struct AppsTab: View {
     @ObservedObject private var store = SettingsStore.shared
 
+    private static let scrollWidth: CGFloat = 70
+    private static let keysWidth: CGFloat = 150
+
     var body: some View {
         Form {
             Section {
+                HStack {
+                    Text("App")
+                    Spacer()
+                    Text("Scrolling").frame(width: Self.scrollWidth)
+                    Text("Keys").frame(width: Self.keysWidth)
+                    Image(systemName: "trash").hidden()
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
                 ForEach($store.settings.appRules) { $rule in
                     HStack {
                         VStack(alignment: .leading) {
@@ -328,36 +362,43 @@ private struct AppsTab: View {
                             Text(rule.bundleID).font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Toggle("Mouse wheel", isOn: Binding(get: { !rule.disableSmoothScroll }, set: { rule.disableSmoothScroll = !$0 }))
+                        Toggle("Scrolling", isOn: Binding(get: { !rule.disableSmoothScroll }, set: { rule.disableSmoothScroll = !$0 }))
+                            .toggleStyle(.checkbox)
+                            .labelsHidden()
+                            .frame(width: Self.scrollWidth)
                         Picker("Keys", selection: $rule.keyMode) {
                             Text("Translate").tag(KeyMode.translate)
                             Text("Terminal mode").tag(KeyMode.terminal)
                             Text("Off").tag(KeyMode.off)
                         }
                         .labelsHidden()
-                        .fixedSize()
+                        .frame(width: Self.keysWidth)
                         Button(role: .destructive) {
                             store.settings.appRules.removeAll { $0.bundleID == rule.bundleID }
                         } label: {
                             Image(systemName: "trash")
                         }
                         .buttonStyle(.borderless)
+                        .help("Remove the rule for \(rule.name)")
                     }
-                    .toggleStyle(.checkbox)
                 }
                 HStack {
-                    Menu("Add running app") {
+                    Menu("Add Running App") {
                         ForEach(runningApps(), id: \.bundleID) { app in
                             Button(app.name) { add(app) }
                         }
                     }
                     .fixedSize()
-                    Button("Choose app…", action: chooseApp)
+                    Button("Choose App…", action: chooseApp)
                 }
             } header: {
-                Text("Per-app rules")
+                Text("Rules for apps that need different behaviour")
             } footer: {
-                Text("Applies while the app is frontmost. Terminal mode leaves Ctrl alone and makes Home/End go to the start/end of the line; Alt+Tab and the Win key work as usual.")
+                Text("""
+                    Apps not listed here get everything. A rule applies while its app is frontmost.
+                    Scrolling: uncheck to leave the mouse wheel to macOS in that app.
+                    Keys: Terminal mode leaves Ctrl alone and makes Home/End go to the start/end of the line, while Alt+Tab and the Win key still work. Off translates nothing. Newly added apps start as Off.
+                    """)
             }
         }
         .formStyle(.grouped)

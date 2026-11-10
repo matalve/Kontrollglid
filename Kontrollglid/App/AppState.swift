@@ -22,6 +22,8 @@ final class AppState: ObservableObject {
     private let buttons = ButtonEngine()
     private let keyboard = KeyboardEngine()
     private var timer: Timer?
+    private var paused = false
+    private var pauseObserver: AnyCancellable?
 
     private init() {}
 
@@ -34,6 +36,11 @@ final class AppState: ObservableObject {
             self?.frontBundleID = app?.bundleIdentifier
         }
 
+        pauseObserver = SettingsStore.shared.$settings.map(\.paused).removeDuplicates().sink { [weak self] paused in
+            self?.paused = paused
+            self?.refresh()
+        }
+
         refresh()
         // Permissions are granted in System Settings while we run, so keep checking.
         let timer = Timer(timeInterval: 2, repeats: true) { [weak self] _ in self?.refresh() }
@@ -44,10 +51,11 @@ final class AppState: ObservableObject {
     private func refresh() {
         let trusted = AXIsProcessTrusted()
         if trusted != accessibilityGranted { accessibilityGranted = trusted }
-        if trusted, !enginesRunning {
+        let shouldRun = trusted && !paused
+        if shouldRun, !enginesRunning {
             let started = [scroll.start(), buttons.start(), keyboard.start()]
             enginesRunning = started.allSatisfy { $0 }
-        } else if !trusted, enginesRunning {
+        } else if !shouldRun, enginesRunning {
             scroll.stop()
             buttons.stop()
             keyboard.stop()
