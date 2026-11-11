@@ -7,9 +7,9 @@ A macOS menu bar app for people who are used to Windows. The name is Swedish for
 
 No network code, no dependencies, no telemetry. Settings stay on your Mac. Requires macOS 14 or later.
 
-<!-- Screenshot: the menu bar menu, opened. Save as docs/screenshots/menu.png and uncomment.
+
 <img src="docs/screenshots/menu.png" width="320" alt="The Kontrollglid menu bar menu">
--->
+
 
 ## Mouse and trackpad
 
@@ -18,9 +18,9 @@ No network code, no dependencies, no telemetry. Settings stay on your Mac. Requi
 - **Modifiers:** hold Shift to scroll sideways, Alt to scroll faster, Cmd to pause smoothing. All three can be changed.
 - **Extra buttons:** assign middle, back, forward and other buttons to any key combination. Unassigned buttons reach the app untouched, so back and forward keep working where the app supports them.
 
-<!-- Screenshot: Settings, Scroll tab in Smooth mode. Save as docs/screenshots/scroll.png and uncomment.
+
 <img src="docs/screenshots/scroll.png" width="560" alt="Scroll settings">
--->
+
 
 Everything can be paused from the menu bar menu.
 
@@ -53,9 +53,9 @@ Add Shift to the navigation keys to select text.
 
 **AltGr** types the characters printed on a Swedish PC keyboard: AltGr+7 `{`, AltGr+0 `}`, AltGr+plus `\`, AltGr+< `|`, AltGr+5 or AltGr+E `€`. This assumes the macOS Swedish layout.
 
-<!-- Screenshot: Settings, Keyboard tab. Save as docs/screenshots/keyboard.png and uncomment.
+
 <img src="docs/screenshots/keyboard.png" width="560" alt="Keyboard settings">
--->
+
 
 Every group of shortcuts can be turned off. By default only external keyboards are translated, so the built-in keyboard keeps working the Mac way.
 
