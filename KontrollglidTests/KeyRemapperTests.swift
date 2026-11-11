@@ -97,6 +97,8 @@ final class KeyRemapperTests: XCTestCase {
     func testWinArrowsSwitchDesktop() {
         XCTAssertEqual(remap(KeyCode.left, .command), .desktopSwitcher(KeyStroke(KeyCode.left, .control)))
         XCTAssertEqual(remap(KeyCode.right, [.command, .control]), .desktopSwitcher(KeyStroke(KeyCode.right, .control)))
+        XCTAssertEqual(remap(KeyCode.up, .command), .desktopSwitcher(KeyStroke(KeyCode.up, .control)))
+        XCTAssertEqual(remap(KeyCode.down, .command), .desktopSwitcher(KeyStroke(KeyCode.down, .control)))
         XCTAssertEqual(remap(KeyCode.left, [.command, .shift]), .passthrough)
     }
 

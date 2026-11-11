@@ -14,7 +14,8 @@ struct KeyRuleSet: Codable, Equatable {
     var closeQuit = true
     /// F5 reloads, Print Screen opens the screenshot tool.
     var functionKeys = true
-    /// Win+L locks the screen, Win+E opens Finder, Win+←/→ switches desktop.
+    /// Win+L locks the screen, Win+E opens Finder, Win+←/→ switches desktop,
+    /// Win+↑ opens Mission Control and Win+↓ shows the app's windows.
     var winKey = true
     /// AltGr gives the characters printed on a Swedish PC keyboard: { } \ | €.
     var altGr = true
@@ -75,7 +76,7 @@ enum KeyRemapper {
             return .keystroke(stroke)
         }
 
-        if rules.winKey, cmd, !alt, shift.isEmpty, keyCode == KeyCode.left || keyCode == KeyCode.right {
+        if rules.winKey, cmd, !alt, shift.isEmpty, KeyCode.arrows.contains(keyCode) {
             return .desktopSwitcher(KeyStroke(keyCode, .control))
         }
 
