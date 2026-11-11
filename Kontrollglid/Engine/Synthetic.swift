@@ -80,12 +80,12 @@ enum Synthetic {
         event.post(tap: .cghidEventTap)
     }
 
-    /// Post a press or release of the left Command key on its own.
-    static func postCommand(down: Bool, otherModifiers: Modifiers) {
-        guard let event = CGEvent(keyboardEventSource: nil, virtualKey: KeyCode.command, keyDown: down) else { return }
+    /// Post a press or release of a left-hand modifier key on its own, leaving
+    /// the system believing that `nowHeld` are the modifiers down afterwards.
+    static func postModifierKey(_ keyCode: UInt16, down: Bool, nowHeld: Modifiers) {
+        guard let event = CGEvent(keyboardEventSource: nil, virtualKey: keyCode, keyDown: down) else { return }
         event.type = .flagsChanged
-        let held = down ? otherModifiers.union(.command) : otherModifiers.subtracting(.command)
-        event.flags = CGEventFlags(rawValue: flagBits(for: held))
+        event.flags = CGEventFlags(rawValue: flagBits(for: nowHeld))
         event.setIntegerValueField(.eventSourceUserData, value: marker)
         event.post(tap: .cghidEventTap)
     }

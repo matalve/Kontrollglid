@@ -212,7 +212,7 @@ private struct ButtonsTab: View {
             }
             Section {
                 if store.settings.buttons.isEmpty {
-                    Text("No buttons are assigned.").foregroundStyle(.secondary)
+                    Text("No buttons are assigned. They all work as the app in front decides.").foregroundStyle(.secondary)
                 }
                 ForEach($store.settings.buttons) { $binding in
                     HStack {
@@ -240,7 +240,7 @@ private struct ButtonsTab: View {
             } header: {
                 Text("Assignments")
             } footer: {
-                Text("Left and right click cannot be reassigned. Mission Control and desktop switching need the standard macOS shortcuts to be enabled.")
+                Text("A button without an assignment is passed to the app untouched. Most browsers and editors already use buttons 4 and 5 for back and forward, so assign those only for apps that ignore them. Left and right click cannot be reassigned.")
             }
             .disabled(!store.settings.buttonsEnabled)
         }

@@ -34,6 +34,9 @@ enum RemapResult: Equatable {
     /// Like `.keystroke`, but Cmd must stay held until Alt is released so the
     /// app switcher stays open.
     case appSwitcher(KeyStroke)
+    /// Like `.keystroke`, but Ctrl must stay held until Win is released so
+    /// several desktops can be stepped through in one go.
+    case desktopSwitcher(KeyStroke)
     /// Swallow the key event and perform an action instead.
     case action(SystemAction)
 }
@@ -73,7 +76,7 @@ enum KeyRemapper {
         }
 
         if rules.winKey, cmd, !alt, shift.isEmpty, keyCode == KeyCode.left || keyCode == KeyCode.right {
-            return .keystroke(KeyStroke(keyCode, .control))
+            return .desktopSwitcher(KeyStroke(keyCode, .control))
         }
 
         if rules.homeEnd, keyCode == KeyCode.home || keyCode == KeyCode.end, !cmd, !alt {

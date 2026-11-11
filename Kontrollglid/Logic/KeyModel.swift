@@ -51,6 +51,7 @@ enum KeyCode {
     static let backspace: UInt16 = 51
     static let escape: UInt16 = 53
     static let command: UInt16 = 55
+    static let control: UInt16 = 59
     static let f5: UInt16 = 96
     static let f13: UInt16 = 105 // Print Screen on PC keyboards
     static let insert: UInt16 = 114 // "Help" on Apple keyboards

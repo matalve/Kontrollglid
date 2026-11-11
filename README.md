@@ -16,7 +16,7 @@ No network code, no dependencies, no telemetry. Settings stay on your Mac. Requi
 - **Wheel modes:** smooth (animated, with adjustable step, speed and smoothness), no acceleration (a fixed number of lines per notch, without the sluggish start macOS has), or macOS default.
 - **Direction:** set separately for mouse wheel and trackpad: follow macOS, like Windows, or natural.
 - **Modifiers:** hold Shift to scroll sideways, Alt to scroll faster, Cmd to pause smoothing. All three can be changed.
-- **Extra buttons:** assign middle, back, forward and other buttons to any key combination. Back and forward work out of the box.
+- **Extra buttons:** assign middle, back, forward and other buttons to any key combination. Unassigned buttons reach the app untouched, so back and forward keep working where the app supports them.
 
 <!-- Screenshot: Settings, Scroll tab in Smooth mode. Save as docs/screenshots/scroll.png and uncomment.
 <img src="docs/screenshots/scroll.png" width="560" alt="Scroll settings">
@@ -45,7 +45,7 @@ On a PC keyboard Ctrl is ⌃, Alt is ⌥ and Win is ⌘.
 | Print Screen | ⇧⌘5 | Screenshot tool |
 | Win+L | ⌃⌘Q | Lock the screen |
 | Win+E | | Open Finder |
-| Win+← / Win+→ | ⌃← / ⌃→ | Switch desktop |
+| Win+← / Win+→ | ⌃← / ⌃→ | Switch desktop (hold Win to step several) |
 | F2 / Delete (Finder only) | ↩ / ⌘⌫ | Rename / move to the Trash |
 
 Add Shift to the navigation keys to select text.

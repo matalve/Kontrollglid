@@ -4,8 +4,24 @@ import CoreGraphics
 /// Translates Windows-style shortcuts into their macOS equivalents.
 final class KeyboardEngine {
     private var tap: EventTap?
-    /// True while we are holding a synthetic Cmd for the app switcher.
-    private var switcherActive = false
+    /// A modifier we hold down on the user's behalf while they hold another:
+    /// Cmd while Alt is held for the app switcher, Ctrl while Win is held for
+    /// switching desktops. The system has to see the real modifier go down and
+    /// stay down, or these multi-step gestures end after the first step.
+    private struct Hold {
+        let physical: Modifiers
+        let synthetic: Modifiers
+        let keyCode: UInt16
+
+        static let appSwitcher = Hold(physical: .option, synthetic: .command, keyCode: KeyCode.command)
+        static let desktopSwitcher = Hold(physical: .command, synthetic: .control, keyCode: KeyCode.control)
+
+        func translate(_ held: Modifiers) -> Modifiers {
+            held.subtracting(physical).union(synthetic)
+        }
+    }
+
+    private var hold: Hold?
     /// Keys whose key-down we swallowed, so the key-up is swallowed too.
     private var swallowed = Set<UInt16>()
 
@@ -19,7 +35,7 @@ final class KeyboardEngine {
     }
 
     func stop() {
-        endSwitcher(held: [])
+        endHold(held: [])
         tap = nil
     }
 
@@ -29,13 +45,13 @@ final class KeyboardEngine {
 
         if type == .flagsChanged {
             // Alt released: let go of the Cmd we were holding for the switcher.
-            guard switcherActive else { return event }
-            if held.contains(.option) {
-                // Shift pressed mid-switch: the system must keep seeing Cmd held,
-                // or it takes this as Cmd being released and closes the switcher.
-                Synthetic.setModifiers(held.subtracting(.option).union(.command), on: event)
+            guard let hold else { return event }
+            if held.contains(hold.physical) {
+                // Shift pressed mid-switch: the system must keep seeing our
+                // modifier held, or it takes this as the modifier being released.
+                Synthetic.setModifiers(hold.translate(held), on: event)
             } else {
-                endSwitcher(held: held)
+                endHold(held: held)
             }
             return event
         }
@@ -43,9 +59,10 @@ final class KeyboardEngine {
         let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
         if type == .keyUp, swallowed.remove(keyCode) != nil { return nil }
 
-        if switcherActive, held.contains(.option) {
-            // Arrows, Q, Esc and Tab should all act on the open switcher.
-            Synthetic.apply(KeyStroke(keyCode, held.subtracting(.option).union(.command)), to: event)
+        if let hold, held.contains(hold.physical) {
+            // Arrows, Q, Esc and Tab should all act on the open switcher, and
+            // further arrows should keep stepping through desktops.
+            Synthetic.apply(KeyStroke(keyCode, hold.translate(held)), to: event)
             return event
         }
 
@@ -76,10 +93,11 @@ final class KeyboardEngine {
             Synthetic.apply(stroke, to: event)
             return event
         case .appSwitcher(let stroke):
-            if type == .keyDown, !switcherActive {
-                switcherActive = true
-                Synthetic.postCommand(down: true, otherModifiers: stroke.modifiers)
-            }
+            if type == .keyDown { beginHold(.appSwitcher, held: held) }
+            Synthetic.apply(stroke, to: event)
+            return event
+        case .desktopSwitcher(let stroke):
+            if type == .keyDown { beginHold(.desktopSwitcher, held: held) }
             Synthetic.apply(stroke, to: event)
             return event
         case .action(let action):
@@ -109,16 +127,22 @@ final class KeyboardEngine {
         let outcome: String
         switch result {
         case .passthrough: outcome = "not translated"
-        case .keystroke(let stroke), .appSwitcher(let stroke): outcome = "becomes \(KeyNames.describe(stroke))"
+        case .keystroke(let stroke), .appSwitcher(let stroke), .desktopSwitcher(let stroke): outcome = "becomes \(KeyNames.describe(stroke))"
         case .action(.openFinder): outcome = "opens Finder"
         }
         AppState.shared.lastKeyReport = "\(KeyNames.describe(pressed)) (code \(pressed.keyCode)), \(source): \(outcome)"
     }
 
-    private func endSwitcher(held: Modifiers) {
-        guard switcherActive else { return }
-        switcherActive = false
-        Synthetic.postCommand(down: false, otherModifiers: held)
+    private func beginHold(_ new: Hold, held: Modifiers) {
+        guard hold == nil else { return }
+        hold = new
+        Synthetic.postModifierKey(new.keyCode, down: true, nowHeld: new.translate(held))
+    }
+
+    private func endHold(held: Modifiers) {
+        guard let hold else { return }
+        self.hold = nil
+        Synthetic.postModifierKey(hold.keyCode, down: false, nowHeld: held.subtracting(hold.synthetic))
     }
 
     private func perform(_ action: SystemAction) {

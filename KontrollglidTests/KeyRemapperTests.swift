@@ -95,8 +95,8 @@ final class KeyRemapperTests: XCTestCase {
     // MARK: - Second round
 
     func testWinArrowsSwitchDesktop() {
-        XCTAssertEqual(remap(KeyCode.left, .command), .keystroke(KeyStroke(KeyCode.left, .control)))
-        XCTAssertEqual(remap(KeyCode.right, [.command, .control]), .keystroke(KeyStroke(KeyCode.right, .control)))
+        XCTAssertEqual(remap(KeyCode.left, .command), .desktopSwitcher(KeyStroke(KeyCode.left, .control)))
+        XCTAssertEqual(remap(KeyCode.right, [.command, .control]), .desktopSwitcher(KeyStroke(KeyCode.right, .control)))
         XCTAssertEqual(remap(KeyCode.left, [.command, .shift]), .passthrough)
     }
 
@@ -129,5 +129,22 @@ final class KeyRemapperTests: XCTestCase {
         let old = #"{"appRules":[{"bundleID":"com.apple.Terminal","name":"Terminal","disableSmoothScroll":false,"disableKeyRemap":true},{"bundleID":"com.apple.Notes","name":"Notes","disableSmoothScroll":false,"disableKeyRemap":true},{"bundleID":"x.y","name":"X","disableSmoothScroll":true,"disableKeyRemap":false}]}"#
         let rules = try XCTUnwrap(AppSettings.decode(Data(old.utf8))).appRules
         XCTAssertEqual(rules.map(\.keyMode), [.terminal, .off, .translate])
+    }
+
+    func testOldDefaultButtonAssignmentsAreDropped() throws {
+        let custom = ButtonBinding(button: 2, stroke: KeyStroke(KeyCode.up, .control))
+        var old = AppSettings()
+        old.buttons = [
+            ButtonBinding(button: 3, stroke: KeyStroke(KeyCode.leftBracket, .command)),
+            ButtonBinding(button: 4, stroke: KeyStroke(KeyCode.c, .command)),
+            custom,
+        ]
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(old)) as? [String: Any])
+        json["version"] = nil
+        let migrated = try XCTUnwrap(AppSettings.decode(JSONSerialization.data(withJSONObject: json)))
+        XCTAssertEqual(migrated.buttons.map(\.button), [4, 2])
+        // Once migrated, a deliberately re-added ⌘[ assignment is kept.
+        let again = try XCTUnwrap(AppSettings.decode(JSONEncoder().encode(old)))
+        XCTAssertEqual(again.buttons.count, 3)
     }
 }

@@ -162,10 +162,11 @@ struct AppSettings: Codable, Equatable {
     var paused = false
     var scroll = ScrollSettings()
     var buttonsEnabled = true
-    var buttons: [ButtonBinding] = [
-        ButtonBinding(button: 3, stroke: KeyStroke(KeyCode.leftBracket, .command)),
-        ButtonBinding(button: 4, stroke: KeyStroke(KeyCode.rightBracket, .command)),
-    ]
+    /// Bumped when saved settings need a one-off adjustment, see `decode`.
+    var version = 2
+    /// Empty by default: unassigned buttons reach the app untouched, and most
+    /// apps already treat buttons 4 and 5 as back and forward.
+    var buttons: [ButtonBinding] = []
     var keyboard = KeyboardSettings()
     /// Terminals need the real Ctrl+C, and remote desktops/VMs already speak
     /// Windows, so they get terminal mode and no translation respectively.
@@ -189,7 +190,16 @@ struct AppSettings: Codable, Equatable {
               let defaultsData = try? JSONEncoder().encode(AppSettings()),
               let defaults = try? JSONSerialization.jsonObject(with: defaultsData) as? [String: Any],
               let merged = try? JSONSerialization.data(withJSONObject: merge(saved, onto: defaults)) else { return nil }
-        return try? JSONDecoder().decode(AppSettings.self, from: merged)
+        guard var settings = try? JSONDecoder().decode(AppSettings.self, from: merged) else { return nil }
+        if (saved["version"] as? Int ?? 1) < 2 {
+            // Version 1 assigned back/forward to ⌘[ and ⌘] by default, which
+            // replaced the apps' own handling and is wrong on non-US layouts.
+            settings.buttons.removeAll {
+                ($0.button == 3 && $0.stroke == KeyStroke(KeyCode.leftBracket, .command)) ||
+                    ($0.button == 4 && $0.stroke == KeyStroke(KeyCode.rightBracket, .command))
+            }
+        }
+        return settings
     }
 
     private static func merge(_ saved: [String: Any], onto defaults: [String: Any]) -> [String: Any] {
