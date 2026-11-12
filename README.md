@@ -47,6 +47,7 @@ On a PC keyboard Ctrl is ⌃, Alt is ⌥ and Win is ⌘.
 | Win+E | | Open Finder |
 | Win+← / Win+→ | ⌃← / ⌃→ | Switch desktop (hold Win to step several) |
 | Win+↑ / Win+↓ | ⌃↑ / ⌃↓ | Mission Control / the app's windows |
+| Win+Shift+← / Win+Shift+→ | | Move the window to the display on the left / right |
 | F2 / Delete (Finder only) | ↩ / ⌘⌫ | Rename / move to the Trash |
 
 Add Shift to the navigation keys to select text.

@@ -15,7 +15,8 @@ struct KeyRuleSet: Codable, Equatable {
     /// F5 reloads, Print Screen opens the screenshot tool.
     var functionKeys = true
     /// Win+L locks the screen, Win+E opens Finder, Win+←/→ switches desktop,
-    /// Win+↑ opens Mission Control and Win+↓ shows the app's windows.
+    /// Win+↑ opens Mission Control, Win+↓ shows the app's windows and
+    /// Win+Shift+←/→ moves the window to another display.
     var winKey = true
     /// AltGr gives the characters printed on a Swedish PC keyboard: { } \ | €.
     var altGr = true
@@ -25,6 +26,8 @@ struct KeyRuleSet: Codable, Equatable {
 
 enum SystemAction: Equatable {
     case openFinder
+    /// Move the focused window to the display to the right (or left).
+    case moveWindow(toNext: Bool)
 }
 
 enum RemapResult: Equatable {
@@ -74,6 +77,10 @@ enum KeyRemapper {
 
         if rules.altGr, altGr, m == [.option], let stroke = swedishAltGr[keyCode] {
             return .keystroke(stroke)
+        }
+
+        if rules.winKey, m == [.command, .shift], keyCode == KeyCode.left || keyCode == KeyCode.right {
+            return .action(.moveWindow(toNext: keyCode == KeyCode.right))
         }
 
         if rules.winKey, cmd, !alt, shift.isEmpty, KeyCode.arrows.contains(keyCode) {

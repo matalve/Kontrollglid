@@ -129,6 +129,7 @@ final class KeyboardEngine {
         case .passthrough: outcome = "not translated"
         case .keystroke(let stroke), .appSwitcher(let stroke), .desktopSwitcher(let stroke): outcome = "becomes \(KeyNames.describe(stroke))"
         case .action(.openFinder): outcome = "opens Finder"
+        case .action(.moveWindow): outcome = "moves the window to another display"
         }
         AppState.shared.lastKeyReport = "\(KeyNames.describe(pressed)) (code \(pressed.keyCode)), \(source): \(outcome)"
     }
@@ -149,6 +150,8 @@ final class KeyboardEngine {
         switch action {
         case .openFinder:
             NSWorkspace.shared.open(FileManager.default.homeDirectoryForCurrentUser)
+        case .moveWindow(let toNext):
+            WindowMover.moveFocusedWindow(toNext: toNext)
         }
     }
 }

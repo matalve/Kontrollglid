@@ -99,7 +99,9 @@ final class KeyRemapperTests: XCTestCase {
         XCTAssertEqual(remap(KeyCode.right, [.command, .control]), .desktopSwitcher(KeyStroke(KeyCode.right, .control)))
         XCTAssertEqual(remap(KeyCode.up, .command), .desktopSwitcher(KeyStroke(KeyCode.up, .control)))
         XCTAssertEqual(remap(KeyCode.down, .command), .desktopSwitcher(KeyStroke(KeyCode.down, .control)))
-        XCTAssertEqual(remap(KeyCode.left, [.command, .shift]), .passthrough)
+        XCTAssertEqual(remap(KeyCode.left, [.command, .shift]), .action(.moveWindow(toNext: false)))
+        XCTAssertEqual(remap(KeyCode.right, [.command, .shift]), .action(.moveWindow(toNext: true)))
+        XCTAssertEqual(remap(KeyCode.up, [.command, .shift]), .passthrough)
     }
 
     func testAltGrTypesPCCharacters() {

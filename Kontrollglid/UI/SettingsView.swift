@@ -296,7 +296,7 @@ private struct KeyboardTab: View {
                 Section("Apps and windows") {
                     RuleToggle("Alt+Tab", "Switches app, like ⌘⇥", rules.altTab)
                     RuleToggle("Alt+F4 and Ctrl+F4", "Quits the app and closes the window/tab", rules.closeQuit)
-                    RuleToggle("Win key", "Win+L locks the screen, Win+E opens Finder, Win+←/→ switches desktop, Win+↑ opens Mission Control, Win+↓ shows the app's windows", rules.winKey)
+                    RuleToggle("Win key", "Win+L locks the screen, Win+E opens Finder, Win+←/→ switches desktop, Win+↑ opens Mission Control, Win+↓ shows the app's windows, Win+Shift+←/→ moves the window to another display", rules.winKey)
                     RuleToggle("F5 and Print Screen", "Reloads and opens the screenshot tool", rules.functionKeys)
                     RuleToggle("Finder", "F2 renames, Delete moves to the Trash", rules.finderKeys)
                 }
