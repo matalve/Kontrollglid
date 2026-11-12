@@ -22,7 +22,9 @@ enum WindowMover {
             return
         }
         // macOS refuses to move a full-screen window, so take it out of full
-        // screen, move it, and put it back once the animation has finished.
+        // screen and move it once the animation has finished. It deliberately
+        // stays an ordinary window: what is full screen on a small display
+        // rarely needs to be on a large one.
         busy = true
         setFullScreen(window, false)
         waitUntilSettled(window, attemptsLeft: 40) { settled in
@@ -32,7 +34,6 @@ enum WindowMover {
             let areas = displayAreas()
             guard target < areas.count else { return }
             place(window, frame: restored, from: areas[index(of: restored, in: areas)], into: areas[target])
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { setFullScreen(window, true) }
         }
     }
 
